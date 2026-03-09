@@ -3,22 +3,22 @@ var router = express.Router();
 let { postUserValidator, validateResult } = require('../utils/validatorHandler')
 let userController = require('../controllers/users')
 
-let { checkLogin } = require('../utils/authHandler.js')
-
+let { checkLogin, checkRole } = require('../utils/authHandler.js')
 
 
 let userModel = require("../schemas/users");
 //- Strong password
 
-router.get("/", checkLogin, async function (req, res, next) {
-  let users = await userModel
-    .find({ isDeleted: false })
-    .populate({
-      'path': 'role',
-      'select': "name"
-    })
-  res.send(users);
-});
+router.get("/", checkLogin,
+  checkRole("ADMIN", "MODERATOR"), async function (req, res, next) {
+    let users = await userModel
+      .find({ isDeleted: false })
+      .populate({
+        'path': 'role',
+        'select': "name"
+      })
+    res.send(users);
+  });
 
 router.get("/:id", checkLogin, async function (req, res, next) {
   try {
@@ -35,13 +35,13 @@ router.get("/:id", checkLogin, async function (req, res, next) {
   }
 });
 
-router.post("/", postUserValidator, validateResult,
+router.post("/",checkLogin,checkRole("ADMIN"), postUserValidator, validateResult,
   async function (req, res, next) {
     try {
       let newItem = await userController.CreateAnUser(
         req.body.username,
         req.body.password,
-        req.body.message,
+        req.body.email,
         req.body.role
       )
       // populate cho đẹp

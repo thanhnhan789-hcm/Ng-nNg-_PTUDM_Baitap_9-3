@@ -27,6 +27,6 @@ module.exports = {
         return await userModel.findOne({
             _id: id,
             isDeleted:false
-        })
+        }).populate('role')
     }
 }
